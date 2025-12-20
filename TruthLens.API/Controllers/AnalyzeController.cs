@@ -56,21 +56,68 @@ namespace TruthLens.API.Controllers
                     response.Message = "URL content analyzed successfully";
                 }
 
-                if(!string.IsNullOrEmpty(response.AnalyzedContent))
+                if(string.IsNullOrEmpty(response.AnalyzedContent)) return BadRequest("No content to analyze.");
+                
+                var aiResult = await _aiService.AnalyzeTextAsync(response.AnalyzedContent);
+                response.AiScore = aiResult.Score;
+                response.AiLabel = aiResult.Label;
+                response.CategoryScores = aiResult.CategoryScores;
+                response.AiExplanation = aiResult.Explanation;
+
+                var googleResults = await _googleVerificationService.VerifyNewsAsync(response.AnalyzedContent);
+
+                if (googleResults.FactCheck?.Claims != null && googleResults.FactCheck.Claims.Count > 0)
                 {
-                    var aiResult = await _aiService.AnalyzeTextAsync(response.AnalyzedContent);
+                    var bestClaim = googleResults.FactCheck.Claims.First();
+                    var review = bestClaim.ClaimReviews?.FirstOrDefault();
 
-                    response.AiScore = aiResult.Score;
-                    response.AiLabel = aiResult.Label;
-                    var verificationResult = await _googleVerificationService.VerifyNewsAsync(response.AnalyzedContent);
-                    response.AiExplanation = $"{verificationResult} \n\n{aiResult.Explanation}";
+                    // Üst karttaki yazıyı oluştur
+                    if (review != null)
+                    {
+                        response.FactCheckResult = $"[FACT-CHECK]: Verdict: {review.TextualRating} by {review.Publisher.Name}.";
 
+                        // Eğer "False" ise AI kararını ez
+                        if (review.TextualRating.Contains("False") || review.TextualRating.Contains("Fake"))
+                        {
+                            response.AiLabel = "FAKE";
+                            response.AiExplanation = "⚠️ OFFICIAL FACT-CHECK: Proven False.\n" + response.AiExplanation;
+                        }
+                    }
+
+                    // Fact Check linklerini de haber listesine ekle
+                    foreach (var claim in googleResults.FactCheck.Claims)
+                    {
+                        if (claim.ClaimReviews == null) continue;
+                        foreach (var r in claim.ClaimReviews)
+                        {
+                            response.SimilarNews.Add(new RelatedNewsItem
+                            {
+                                Title = string.IsNullOrEmpty(r.Title) ? claim.Text : r.Title,
+                                Url = r.Url,
+                                Source = r.Publisher?.Name ?? "Fact Check"
+                            });
+                        }
+                    }
                 }
-
-
+                if (googleResults.WebSearch?.Items != null)
+                {
+                    foreach (var item in googleResults.WebSearch.Items)
+                    {
+                        // Aynı link zaten listede varsa (Fact Check'ten geldiyse) tekrar ekleme
+                        if (!response.SimilarNews.Any(x => x.Url == item.Link))
+                        {
+                            response.SimilarNews.Add(new RelatedNewsItem
+                            {
+                                Title = item.Title,
+                                Url = item.Link,
+                                Source = new Uri(item.Link).Host // Domain adını al
+                            });
+                        }
+                    }
+                }
+               
                 response.IsSuccess = true;
                 return Ok(response);
-
 
             }
             catch (Exception ex)

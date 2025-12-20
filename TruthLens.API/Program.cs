@@ -30,7 +30,12 @@ builder.Services.AddScoped<IOcrService, OcrService>();
 builder.Services.AddScoped<IScraperService, ScraperService>();
 builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.AddScoped<IGoogleVerificationService, GoogleVerificationService>();
+builder.Services.AddHttpClient();
+
+
 var app = builder.Build();
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

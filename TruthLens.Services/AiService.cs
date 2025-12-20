@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using TruthLens.Core.DTOs;
 using TruthLens.Core.Interfaces;
+using TruthLens.Services;
 
 namespace TruthLens.Services
 {
@@ -34,7 +35,8 @@ namespace TruthLens.Services
 
             var candidateLabels = new[] {
                 "Trusted News",      // Güvenilir
-                "Conspiracy Theory", // Komplo Teorisi
+                "Satire",            // Mizah
+             // "Conspiracy Theory", // Komplo Teorisi
                 "Hoax",              // Uydurmaca
                 "Propaganda"         // Propaganda
             };
@@ -70,24 +72,25 @@ namespace TruthLens.Services
 
                 if (results != null && results.Count > 0)
                 {
-                    // En yüksek puanlı etiketi bul
                     var bestPrediction = results.OrderByDescending(x => x.Score).First();
 
-                    // "Trusted News" değilse, diğer her şey bizim için FAKE kategorisindedir.
+                    // if not Trusted News everything else is FAKE
                     bool isFake = bestPrediction.Label != "Trusted News";
 
-                    // DETAYLI AÇIKLAMA: Tüm skorları kullanıcıya gösterelim
-                    // Örn: [Conspiracy: %90, Trusted: %10]
-                    var allScores = string.Join(", ", results.OrderByDescending(r => r.Score)
-                                                             .Select(r => $"{r.Label} (%{r.Score * 100:F1})"));
+                    var scoresDict = results
+                        .OrderByDescending(r => r.Score)
+                        .ToDictionary(r => r.Label, r => (double)r.Score * 100);
 
+                    var explanationBuilder = new System.Text.StringBuilder();
+                    explanationBuilder.AppendLine($"AI has analyzed the content based on linguistic patterns and writing style, this content is classified as '{bestPrediction.Label}'.");
+                    
                     return new AiResultDto
                     {
                         Label = isFake ? "FAKE" : "REAL",
-                        Score = bestPrediction.Score * 100,
-                        Explanation = isFake
-                            ? $"AI DETECTION: This content is flagged as '{bestPrediction.Label}' with %{bestPrediction.Score * 100:F1} confidence. \nFull Analysis: [{allScores}]"
-                            : $"AI DETECTION: This content appears to be 'Trusted News' with %{bestPrediction.Score * 100:F1} confidence. \nFull Analysis: [{allScores}]"
+                        Score = bestPrediction.Score*100,
+                        Explanation = explanationBuilder.ToString(),
+                        CategoryScores = scoresDict
+                        
                     };
                 }
 

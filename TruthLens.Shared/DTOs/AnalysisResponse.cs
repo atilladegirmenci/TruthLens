@@ -19,5 +19,19 @@ namespace TruthLens.Shared.DTOs
 
         public string AiExplanation { get; set; } = string.Empty;
 
+        public Dictionary<string, double> CategoryScores { get; set; } = new();
+
+        public string? FactCheckResult { get; set; }
+
+        public List<RelatedNewsItem> SimilarNews { get; set; } = new();
+
+    }
+
+    public class RelatedNewsItem
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Url { get; set; } = string.Empty;
+        public DateTime PublishedAt { get; set; }
+        public string Source { get; set; } = string.Empty;
     }
 }

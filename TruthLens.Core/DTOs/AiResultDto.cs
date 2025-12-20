@@ -11,5 +11,7 @@ namespace TruthLens.Core.DTOs
         public string Label { get; set; }
         public float Score { get; set; }
         public string Explanation { get; set; }
+
+        public Dictionary<string, double> CategoryScores { get; set;  } = new();
     }
 }
