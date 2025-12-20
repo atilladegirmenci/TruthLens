@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>9f5cbeec-8e4e-4bb7-8450-46a87e415d00</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="tessdata\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TruthLens.Core\TruthLens.Core.csproj" />
+    <ProjectReference Include="..\TruthLens.Services\TruthLens.Services.csproj" />
+    <ProjectReference Include="..\TruthLens.Shared\TruthLens.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="tessdata\tur.traineddata">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
