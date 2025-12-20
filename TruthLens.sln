@@ -3,19 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TruthLens.API", "TruthLens\TruthLens.API.csproj", "{CE61B527-CF4E-40E9-B420-1AF24CDD2760}"
-	ProjectSection(ProjectDependencies) = postProject
-		{760DA8F5-8B26-4E5C-BA31-87D643616AE7} = {760DA8F5-8B26-4E5C-BA31-87D643616AE7}
-		{A6321921-661D-4DAB-A480-7859052DCE08} = {A6321921-661D-4DAB-A480-7859052DCE08}
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TruthLens.Core", "TruthLens.Core\TruthLens.Core.csproj", "{760DA8F5-8B26-4E5C-BA31-87D643616AE7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TruthLens.Services", "TruthLens.Services\TruthLens.Services.csproj", "{A6321921-661D-4DAB-A480-7859052DCE08}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TruthLens.UI", "TruthLens.UI\TruthLens.UI.csproj", "{3B56CCAE-C419-4BA4-BB72-E6F22B64D62B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TruthLens.Shared", "TruthLens.Shared\TruthLens.Shared.csproj", "{55BF0878-2C03-408D-AC5E-9BDCC2F06812}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TruthLens.Shared", "TruthLens.Shared\TruthLens.Shared.csproj", "{55BF0878-2C03-408D-AC5E-9BDCC2F06812}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TruthLens.API", "TruthLens.API\TruthLens.API.csproj", "{D6623830-BF0C-44D2-9FB9-FA61674A53ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +19,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CE61B527-CF4E-40E9-B420-1AF24CDD2760}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CE61B527-CF4E-40E9-B420-1AF24CDD2760}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CE61B527-CF4E-40E9-B420-1AF24CDD2760}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CE61B527-CF4E-40E9-B420-1AF24CDD2760}.Release|Any CPU.Build.0 = Release|Any CPU
 		{760DA8F5-8B26-4E5C-BA31-87D643616AE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{760DA8F5-8B26-4E5C-BA31-87D643616AE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{760DA8F5-8B26-4E5C-BA31-87D643616AE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -43,6 +35,10 @@ Global
 		{55BF0878-2C03-408D-AC5E-9BDCC2F06812}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{55BF0878-2C03-408D-AC5E-9BDCC2F06812}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{55BF0878-2C03-408D-AC5E-9BDCC2F06812}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6623830-BF0C-44D2-9FB9-FA61674A53ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6623830-BF0C-44D2-9FB9-FA61674A53ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6623830-BF0C-44D2-9FB9-FA61674A53ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6623830-BF0C-44D2-9FB9-FA61674A53ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -32,8 +32,6 @@ namespace TruthLens.Services
 
             string truncatedText = text.Length > 1000 ? text.Substring(0, 1000) : text;
 
-            // STRATEJİ DEĞİŞİKLİĞİ: Sadece "Fake/Real" değil, spesifik türleri soruyoruz.
-            // Model gramere bakıp "Real" demesin diye "Conspiracy" ve "Hoax" gibi seçenekler ekledik.
             var candidateLabels = new[] {
                 "Trusted News",      // Güvenilir
                 "Conspiracy Theory", // Komplo Teorisi
