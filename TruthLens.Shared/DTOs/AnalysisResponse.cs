@@ -23,7 +23,10 @@ namespace TruthLens.Shared.DTOs
 
         public string? FactCheckResult { get; set; }
 
+        public string? LlmComment { get; set; }
+
         public List<RelatedNewsItem> SimilarNews { get; set; } = new();
+
 
     }
 

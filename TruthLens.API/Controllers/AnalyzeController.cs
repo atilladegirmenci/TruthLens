@@ -15,13 +15,14 @@ namespace TruthLens.API.Controllers
         private readonly IScraperService _scraperService;
         private readonly IAiService _aiService;
         private readonly IGoogleVerificationService _googleVerificationService;
-
-        public AnalyzeController(IOcrService ocrService, IScraperService scraperService, IAiService aiService, IGoogleVerificationService googleVerificationService)
+        private readonly ILLMService _llmService;
+        public AnalyzeController(IOcrService ocrService, IScraperService scraperService, IAiService aiService, IGoogleVerificationService googleVerificationService, ILLMService llmService)
         {
             _googleVerificationService = googleVerificationService;
             _ocrService = ocrService;
             _scraperService = scraperService;
             _aiService = aiService;
+            _llmService = llmService;
         }
 
         [HttpPost("analyze")]
@@ -64,6 +65,9 @@ namespace TruthLens.API.Controllers
                 response.CategoryScores = aiResult.CategoryScores;
                 response.AiExplanation = aiResult.Explanation;
 
+                var llmResult = await _llmService.AnalyzeTextAsync(response.AnalyzedContent);
+                response.LlmComment = llmResult.Comment;
+
                 var googleResults = await _googleVerificationService.VerifyNewsAsync(response.AnalyzedContent);
 
                 if (googleResults.FactCheck?.Claims != null && googleResults.FactCheck.Claims.Count > 0)
@@ -71,20 +75,19 @@ namespace TruthLens.API.Controllers
                     var bestClaim = googleResults.FactCheck.Claims.First();
                     var review = bestClaim.ClaimReviews?.FirstOrDefault();
 
-                    // Üst karttaki yazıyı oluştur
                     if (review != null)
                     {
-                        response.FactCheckResult = $"[FACT-CHECK]: Verdict: {review.TextualRating} by {review.Publisher.Name}.";
+                        response.FactCheckResult = $"Verdict: {review.TextualRating} by {review.Publisher.Name}.";
 
-                        // Eğer "False" ise AI kararını ez
-                        if (review.TextualRating.Contains("False") || review.TextualRating.Contains("Fake"))
-                        {
-                            response.AiLabel = "FAKE";
-                            response.AiExplanation = "⚠️ OFFICIAL FACT-CHECK: Proven False.\n" + response.AiExplanation;
-                        }
+                        // if fact check says False or Fake change AiLabel to FAKE and add warning to explanation
+                        //if (review.TextualRating.Contains("False") || review.TextualRating.Contains("Fake"))
+                        //{
+                        //    response.AiLabel = "FAKE";
+                        //    response.AiExplanation = "⚠️ OFFICIAL FACT-CHECK has Proven this False.\n" + response.AiExplanation;
+                        //}
                     }
 
-                    // Fact Check linklerini de haber listesine ekle
+                    // Fact Check links in the Similar News section
                     foreach (var claim in googleResults.FactCheck.Claims)
                     {
                         if (claim.ClaimReviews == null) continue;
@@ -103,19 +106,19 @@ namespace TruthLens.API.Controllers
                 {
                     foreach (var item in googleResults.WebSearch.Items)
                     {
-                        // Aynı link zaten listede varsa (Fact Check'ten geldiyse) tekrar ekleme
+                        // if same link exist doesnt add again
                         if (!response.SimilarNews.Any(x => x.Url == item.Link))
                         {
                             response.SimilarNews.Add(new RelatedNewsItem
                             {
                                 Title = item.Title,
                                 Url = item.Link,
-                                Source = new Uri(item.Link).Host // Domain adını al
+                                Source = new Uri(item.Link).Host // Domain name
                             });
                         }
                     }
                 }
-               
+
                 response.IsSuccess = true;
                 return Ok(response);
 

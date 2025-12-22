@@ -82,8 +82,9 @@ namespace TruthLens.Services
                         .ToDictionary(r => r.Label, r => (double)r.Score * 100);
 
                     var explanationBuilder = new System.Text.StringBuilder();
-                    explanationBuilder.AppendLine($"AI has analyzed the content based on linguistic patterns and writing style, this content is classified as '{bestPrediction.Label}'.");
-                    
+                    explanationBuilder.AppendLine($"The AI evaluated this content based solely on its linguistic patterns, grammar, and writing style," +
+                        $" without performing an external fact-check. Based on these structural indicators, " +
+                        $"the text is classified as '{bestPrediction.Label}'.");
                     return new AiResultDto
                     {
                         Label = isFake ? "FAKE" : "REAL",

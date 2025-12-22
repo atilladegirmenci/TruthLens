@@ -30,6 +30,7 @@ builder.Services.AddScoped<IOcrService, OcrService>();
 builder.Services.AddScoped<IScraperService, ScraperService>();
 builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.AddScoped<IGoogleVerificationService, GoogleVerificationService>();
+builder.Services.AddScoped<ILLMService, LLMService>();
 builder.Services.AddHttpClient();
 
 

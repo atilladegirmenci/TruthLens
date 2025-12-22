@@ -2,256 +2,308 @@
 @using System.Net.Http.Json
 @using TruthLens.Shared.DTOs
 @using System.Text.Json
-@inject HttpClient Http
 @using System.Linq
+@inject HttpClient Http
 
-<div class="text-center my-5 animate__animated animate__fadeInDown">
-    <h1 class="display-4 fw-bold text-primary"><i class="bi bi-search-heart"></i> TruthLens</h1>
-    <p class="lead text-muted">
-        AI-Powered Fake News Detection & Fact Verification System
-    </p>
-</div>
+<div class="page-wrapper w-100 overflow-hidden">
 
-<div class="card shadow-sm mx-auto" style="max-width: 800px;">
-    <div class="card-header bg-white p-0">
-        <ul class="nav nav-tabs nav-fill" id="inputTabs">
-            <li class="nav-item">
-                <button class="nav-link @(activeTab == 0 ? "active fw-bold" : "")" @onclick="() => SetTab(0)">
-                    <i class="bi bi-fonts"></i> Text Analysis
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link @(activeTab == 1 ? "active fw-bold" : "")" @onclick="() => SetTab(1)">
-                    <i class="bi bi-link-45deg"></i> URL Analysis
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link @(activeTab == 2 ? "active fw-bold" : "")" @onclick="() => SetTab(2)">
-                    <i class="bi bi-image"></i> Screenshot OCR
-                </button>
-            </li>
-        </ul>
-    </div>
-
-    <div class="card-body p-4">
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="alert alert-danger d-flex align-items-center">
-                <i class="bi bi-exclamation-octagon-fill me-2 fs-4"></i>
-                <div>@errorMessage</div>
-            </div>
-        }
-
-        @if (activeTab == 0)
-        {
-            <div class="mb-3 animate__animated animate__fadeIn">
-                <label class="form-label text-secondary fw-bold">Paste the news text here:</label>
-                <textarea class="form-control" rows="6" @bind="inputText" placeholder="e.g. According to breaking reports..."></textarea>
-            </div>
-        }
-
-        @if (activeTab == 1)
-        {
-            <div class="mb-3 animate__animated animate__fadeIn">
-                <label class="form-label text-secondary fw-bold">Paste the news link (URL):</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-globe"></i></span>
-                    <input type="text" class="form-control" @bind="inputUrl" placeholder="https://example.com/news-article..." />
-                </div>
-                <small class="text-muted fst-italic mt-1 d-block">System will scrape the content from the provided link.</small>
-            </div>
-        }
-
-        @if (activeTab == 2)
-        {
-            <div class="mb-3 text-center border rounded p-4 bg-light animate__animated animate__fadeIn">
-                <i class="bi bi-cloud-arrow-up display-4 text-primary opacity-50"></i>
-                <br />
-                <label class="form-label mt-2 fw-bold text-secondary">Upload a screenshot</label>
-                <InputFile OnChange="HandleFileSelected" class="form-control mt-2" accept="image/*" />
-
-                @if (!string.IsNullOrEmpty(imageBase64Preview))
-                {
-                    <div class="mt-3 position-relative d-inline-block">
-                        <img src="@imageBase64Preview" class="img-thumbnail shadow-sm" style="max-height: 200px;" />
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
-                            <i class="bi bi-check"></i> Ready
-                        </span>
-                    </div>
-                }
-            </div>
-        }
-
-        <div class="d-grid gap-2 mt-4">
-            <button class="btn btn-primary btn-lg shadow-sm" @onclick="AnalyzeAsync" disabled="@isLoading">
-                @if (isLoading)
-                {
-                    <span><span class="spinner-border spinner-border-sm me-2"></span> Analyzing Truth...</span>
-                }
-                else
-                {
-                    <span><i class="bi bi-magic me-2"></i> Analyze Content</span>
-                }
-            </button>
+    <div class="container-fluid p-0">
+        <div class="text-center py-5 animate__animated animate__fadeInDown">
+            <h1 class="display-4 fw-bold" style="color: var(--theme-blue);">
+                <i class="bi bi-cpu-fill me-2"></i>TruthLens
+            </h1>
+            <p class="lead text-secondary">
+                AI-Powered Fake News Detection & Fact Verification System
+            </p>
         </div>
-    </div>
-</div>
 
-@if (result != null)
-{
-    <div class="mt-5 mx-auto animate__animated animate__fadeInUp" style="max-width: 800px; padding-bottom: 100px;">
+        <div class="container px-3">
+            <div class="glow-card-container mx-auto mb-5 animate__animated animate__fadeIn" style="max-width: 800px;">
+                <div class="card-glow-effect-white"></div>
 
-        @{
-            var isFake = result.AiLabel == "FAKE";
-            var mainColor = isFake ? "danger" : "success";
-        }
-
-        @if (!string.IsNullOrEmpty(result.FactCheckResult))
-        {
-            <div class="card border-@mainColor shadow-sm mb-4 border-2 animate__animated animate__pulse">
-                <div class="card-body d-flex align-items-center bg-@mainColor bg-opacity-10">
-                    <div class="me-4">
-                        <i class="bi bi-shield-exclamation text-@mainColor display-3"></i>
+                <div class="card-surface">
+                    <div class="p-3 border-bottom border-secondary border-opacity-25">
+                        <ul class="nav nav-pills nav-fill gap-2" id="inputTabs">
+                            <li class="nav-item">
+                                <button class="nav-link @(activeTab == 0 ? "active" : "")" @onclick="() => SetTab(0)">
+                                    <i class="bi bi-fonts me-2"></i> Text
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link @(activeTab == 1 ? "active" : "")" @onclick="() => SetTab(1)">
+                                    <i class="bi bi-link-45deg me-2"></i> URL
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link @(activeTab == 2 ? "active" : "")" @onclick="() => SetTab(2)">
+                                    <i class="bi bi-image me-2"></i> Image
+                                </button>
+                            </li>
+                        </ul>
                     </div>
-                    <div>
-                        <h4 class="fw-bold text-@mainColor">Official Fact-Check Result</h4>
-                        <p class="lead mb-0 text-dark fw-bold">
-                            @result.FactCheckResult
-                        </p>
-                        <small class="text-muted">Verified by Google Fact Check Tools</small>
+
+                    <div class="p-4">
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger d-flex align-items-center bg-danger bg-opacity-25 border-danger text-white mb-4">
+                                <i class="bi bi-exclamation-octagon-fill me-2 fs-4"></i>
+                                <div>@errorMessage</div>
+                            </div>
+                        }
+
+                        @if (activeTab == 0)
+                        {
+                            <div class="mb-3 animate__animated animate__fadeIn">
+                                <label class="form-label text-secondary fw-bold small text-uppercase">News Content</label>
+                                <textarea class="form-control custom-input" rows="6" @bind="inputText" placeholder="Paste the text you want to verify..."></textarea>
+                            </div>
+                        }
+
+                        @if (activeTab == 1)
+                        {
+                            <div class="mb-3 animate__animated animate__fadeIn">
+                                <label class="form-label text-secondary fw-bold small text-uppercase">News Link</label>
+                                <div class="input-group">
+                                    <span class="input-group-text custom-input-addon"><i class="bi bi-globe"></i></span>
+                                    <input type="text" class="form-control custom-input" @bind="inputUrl" placeholder="https://example.com/article..." />
+                                </div>
+                                <small class="text-secondary fst-italic mt-2 d-block opacity-75">We will extract the content automatically.</small>
+                            </div>
+                        }
+
+                        @if (activeTab == 2)
+                        {
+                            <div class="mb-3 text-center border border-secondary border-opacity-25 border-dashed rounded-4 p-5 bg-black bg-opacity-25 animate__animated animate__fadeIn">
+                                <i class="bi bi-cloud-arrow-up display-3 text-theme-blue opacity-50"></i>
+                                <br />
+                                <label class="form-label mt-3 fw-bold text-secondary">Upload Screenshot</label>
+                                <InputFile OnChange="HandleFileSelected" class="form-control custom-input mt-3 w-75 mx-auto" accept="image/*" />
+
+                                @if (!string.IsNullOrEmpty(imageBase64Preview))
+                                {
+                                    <div class="mt-4 position-relative d-inline-block">
+                                        <img src="@imageBase64Preview" class="img-fluid rounded-3 shadow-lg border border-secondary" style="max-height: 200px;" />
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
+                                            <i class="bi bi-check"></i>
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <div class="d-grid gap-2 mt-4 pt-2">
+                            <button class="btn-neon" @onclick="AnalyzeAsync" disabled="@isLoading">
+                                @if (isLoading)
+                                {
+                                    <span><span class="spinner-border spinner-border-sm me-2"></span> Analyzing...</span>
+                                }
+                                else
+                                {
+                                    <span>ANALYZE CONTENT</span>
+                                }
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        }
+        </div>
 
-        <div class="card shadow-lg border-0 mb-4 animate__animated animate__fadeInUp">
+        @if (result != null)
+        {
+            <div class="container px-3">
+                <div class="mx-auto pb-5 animate__animated animate__fadeInUp" style="max-width: 800px;">
 
-            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold m-0 text-dark">
-                    <i class="bi bi-robot text-primary me-2"></i> AI Deep Analysis
-                </h5>
-                <span class="badge bg-@mainColor px-4 py-2 rounded-pill shadow-sm fs-6">
-                    @result.AiLabel (%@result.AiScore.ToString("F1"))
-                </span>
-            </div>
+                    @{
+                        var isFake = result.AiLabel == "FAKE";
+                        var badgeColor = isFake ? "bg-danger" : "bg-success";
+                        // Kartın arkasındaki ışık rengi
+                        var glowClass = isFake ? "card-glow-effect-red" : "card-glow-effect-white";
+                    }
 
-            <div class="card-body p-4">
-
-                <div>
-                    <h6 class="text-muted fw-bold text-uppercase small mb-3">
-                        <i class="bi bi-bar-chart-steps me-1"></i> Confidence Breakdown
-                    </h6>
-
-                    @if (result.CategoryScores != null && result.CategoryScores.Count > 0)
+                    @if (!string.IsNullOrEmpty(result.FactCheckResult))
                     {
-                        <div class="row">
-                            @foreach (var category in result.CategoryScores.OrderByDescending(x => x.Value))
-                            {
-                                string barColor = "danger";
-                                string icon = "bi-exclamation-circle-fill";
+                        <div class="glow-card-container mb-4 animate__animated animate__pulse">
+                            <div class="card-glow-effect-white"></div>
 
-                                if (category.Key.Contains("Trusted") || category.Key.Contains("Real"))
-                                {
-                                    barColor = "success";
-                                    icon = "bi-check-circle-fill";
-                                }
+                            <div class="card-surface d-flex align-items-center p-4">
 
-                                <div class="col-12 mb-3">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span class="fw-bold text-dark small">
-                                            <i class="bi @icon text-@barColor me-1 opacity-75"></i> @category.Key
+                                <div class="me-3 text-light opacity-75 flex-shrink-0">
+                                    <i class="bi bi-shield-check display-3"></i>
+                                </div>
+
+                                <div class="flex-grow-1 text-start ps-2">
+                                    <h4 class="fw-bold text-white mb-1">External Fact-Check Record</h4>
+
+                                    <p class="lead mb-1 text-light opacity-90 fw-normal">
+                                        @result.FactCheckResult
+                                    </p>
+
+                                    <div class="mt-2 text-end">
+                                        <span class="badge bg-opacity-50 border border-secondary border-opacity-25 text-secondary fst-normal" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                                            <i class="bi bi-google me-1"></i> Powered by <strong>Google Fact Check Tools</strong>
                                         </span>
-                                        <span class="fw-bold text-@barColor small">%@category.Value.ToString("F1")</span>
-                                    </div>
-                                    <div class="progress" style="height: 18px; border-radius: 9px; background-color: #f1f3f5;">
-                                        <div class="progress-bar bg-@barColor progress-bar-striped" role="progressbar"
-                                             style="width: @category.Value.ToString("0", System.Globalization.CultureInfo.InvariantCulture)%"
-                                             aria-valuenow="@category.Value" aria-valuemin="0" aria-valuemax="100">
-                                        </div>
                                     </div>
                                 </div>
-                            }
+
+                            </div>
                         </div>
                     }
-                    else
-                    {
-                        <div class="alert alert-light text-center small text-muted">
-                            Detailed score breakdown not available.
+
+                    <div class="glow-card-container mb-4">
+                        <div class="@glowClass"></div>
+
+                        <div class="card-surface p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+                                <h5 class="fw-bold m-0 text-white">
+                                    <i class="bi bi-robot text-theme-blue me-2"></i> AI Deep Analysis
+                                </h5>
+                                <span class="badge @badgeColor px-4 py-2 rounded-pill shadow-sm fs-6">
+                                    @result.AiLabel (%@result.AiScore.ToString("F1"))
+                                </span>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="text-secondary fw-bold text-uppercase small mb-3">Confidence Breakdown</h6>
+                                @if (result.CategoryScores != null && result.CategoryScores.Count > 0)
+                                {
+                                    <div class="d-flex flex-column gap-3">
+                                        @foreach (var category in result.CategoryScores.OrderByDescending(x => x.Value))
+                                        {
+                                            string barColor = "bg-danger";
+                                            string icon = "bi-exclamation-triangle-fill";
+                                            string textColor = "text-danger";
+
+                                            if (category.Key.Contains("Trusted") || category.Key.Contains("Real"))
+                                            {
+                                                barColor = "bg-success";
+                                                icon = "bi-check-circle-fill";
+                                                textColor = "text-success";
+                                            }
+
+                                            <div class="col-12 animate__animated animate__fadeIn">
+                                                <div class="d-flex justify-content-between mb-2 align-items-center">
+                                                    <span class="fw-bold text-light" style="font-size: 0.95rem;">
+                                                        <i class="bi @icon @textColor me-2"></i> @category.Key
+                                                    </span>
+                                                    <span class="fw-bold @textColor" style="font-size: 0.95rem;">%@category.Value.ToString("F1")</span>
+                                                </div>
+
+                                                <div class="progress" style="height: 12px; border-radius: 6px; background-color: rgba(255,255,255,0.08);">
+                                                    <div class="progress-bar @barColor" role="progressbar"
+                                                         style="width: @category.Value.ToString("0", System.Globalization.CultureInfo.InvariantCulture)%; border-radius: 6px;"
+                                                         aria-valuenow="@category.Value" aria-valuemin="0" aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top border-secondary border-opacity-25">
+                                <small class="text-secondary d-block mb-1 text-uppercase fw-bold" style="font-size: 0.7rem;">Structural Model Notes</small>
+                                <p class="text-secondary small mb-0 opacity-75 fst-italic">
+                                    @result.AiExplanation
+                                </p>
+                            </div>
+                            <div class="mt-3 text-end">
+                                <span class="badge bg-opacity-20 border border-secondary border-opacity-25 text-secondary fst-normal" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                                    <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Powered by <strong>Google BERT & Hugging Face</strong>
+                                </span>
+                            </div>
                         </div>
-                    }
-                </div>
+                    </div>
 
-                <hr class="my-4 text-muted opacity-25">
-
-                <div>
-                    <p class="card-text text-secondary mb-0" style="white-space: pre-line; font-size: 1.05rem; line-height: 1.7; text-align: justify;">
-                        <i class="bi bi-chat-right-quote-fill text-muted me-2 opacity-50"></i>
-                        @result.AiExplanation
-                    </p>
-                </div>
-
-            </div>
-        </div>
-
-        @if (result.SimilarNews != null && result.SimilarNews.Count > 0)
-        {
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-light py-3 border-bottom">
-                    <h5 class="fw-bold m-0 text-secondary">
-                        <i class="bi bi-globe2 me-2"></i> Related Sources & Verification
-                    </h5>
-                </div>
-                <div class="list-group list-group-flush">
-                    @foreach (var news in result.SimilarNews)
+                    @if (!string.IsNullOrEmpty(result.LlmComment))
                     {
-                        <a href="@news.Url" target="_blank" class="list-group-item list-group-item-action p-4 d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1 text-primary fw-bold" style="font-size: 1.1rem;">
-                                    @(string.IsNullOrEmpty(news.Title) ? news.Url : news.Title)
-                                </h6>
-                                <div class="mt-2">
-                                    <span class="badge bg-light text-dark border me-2">
-                                        <i class="bi bi-building"></i> @news.Source
+                        <div class="glow-card-container mb-4 animate__animated animate__fadeInUp">
+                            <div class="card-glow-effect-white"></div>
+
+                            <div class="card-surface p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
+                                         style="width: 45px; height: 45px; min-width: 45px; color: #00d4ff;">
+
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16">
+                                            <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z" />
+                                        </svg>
+
+                                    </div>
+                                    <h5 class="fw-bold m-0 text-white">AI Assessment</h5>
+                                </div>
+
+                                <div class="ps-1">
+                                    <p class="mb-0 text-light opacity-90 fst-italic" style="white-space: pre-line; line-height: 1.7; font-size: 1.05rem;">
+                                        <i class="bi bi-quote text-secondary opacity-50 fs-3 me-1 align-middle"></i>
+                                        @result.LlmComment
+                                    </p>
+                                </div>
+                                <div class="mt-3 text-end">
+                                    <span class="badge bg-opacity-20 border border-secondary border-opacity-25 text-secondary fst-normal" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                                        <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Powered by <strong>Google Gemini 3 flash</strong>
                                     </span>
-                                    <small class="text-muted">Click to read full article</small>
                                 </div>
                             </div>
-                            <i class="bi bi-box-arrow-up-right text-secondary fs-4"></i>
-                        </a>
+                        </div>
+                    }
+
+                    @if (result.SimilarNews != null && result.SimilarNews.Count > 0)
+                    {
+                        <div class="glow-card-container mb-5">
+                            <div class="card-glow-effect-white"></div>
+                            <div class="card-surface p-0">
+
+                                <div class="p-4 border-bottom border-secondary border-opacity-25">
+                                    <h5 class="fw-bold m-0 text-white">
+                                        <i class="bi bi-globe2 text-theme-blue me-2"></i> Related Sources
+                                    </h5>
+                                </div>
+
+                                <div class="list-group list-group-flush">
+                                    @foreach (var news in result.SimilarNews)
+                                    {
+                                        <a href="@news.Url" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary border-opacity-25 p-4 d-flex align-items-center hover-effect">
+
+                                            <div class="pe-3 flex-grow-1" style="min-width: 0;">
+                                                <h6 class="mb-1 fw-bold text-truncate">
+                                                    @(string.IsNullOrEmpty(news.Title) ? news.Url : news.Title)
+                                                </h6>
+                                                <div class="mt-2">
+                                                    <span class="badge bg-secondary bg-opacity-50 border border-secondary border-opacity-50 text-light fw-normal">
+                                                        <i class="bi bi-building me-1"></i> @news.Source
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-dark bg-opacity-75 rounded-circle p-3 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 50px; height: 50px;">
+                                                <i class="bi bi-box-arrow-up-right text-theme-blue fs-5"></i>
+                                            </div>
+                                        </a>
+                                    }
+                                    <div class="mt-3 text-end">
+                                        <span class="badge bg-opacity-20 border border-secondary border-opacity-25 text-secondary fst-normal" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                                            <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Powered by <strong>Google Search API</strong>
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
                     }
                 </div>
             </div>
         }
-
-        <div class="text-center mt-5">
-            <button class="btn btn-link text-muted text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#contentCollapse">
-                <i class="bi bi-eye"></i> Show Analyzed Content Snippet
-            </button>
-        </div>
-
-        <div class="collapse mt-2" id="contentCollapse">
-            <div class="card card-body bg-light border-0 small text-muted fst-italic mx-4">
-                @if (!string.IsNullOrEmpty(result.AnalyzedContent))
-                {
-                    @(result.AnalyzedContent.Length > 600 ? result.AnalyzedContent.Substring(0, 600) + "..." : result.AnalyzedContent)
-                }
-            </div>
-        </div>
-
     </div>
-}
+</div>
 
 @code {
-    private int activeTab = 0; // 0: Text, 1: Url, 2: Image
-
+    private int activeTab = 0;
     private string inputText = "";
     private string inputUrl = "";
     private string imageBase64Data = "";
     private string imageBase64Preview = "";
-
     private bool isLoading = false;
     private string errorMessage = "";
-
     private AnalysisResponse? result;
 
     private void SetTab(int tabIndex)
@@ -266,13 +318,10 @@
         try
         {
             var file = e.File;
-            // Resize for performance
             var resizedFile = await file.RequestImageFileAsync(file.ContentType, 800, 800);
             var buffer = new byte[resizedFile.Size];
-            await resizedFile.OpenReadStream(maxAllowedSize: 5120000).ReadAsync(buffer); // Max 5MB
-
+            await resizedFile.OpenReadStream(maxAllowedSize: 5120000).ReadAsync(buffer);
             var base64 = Convert.ToBase64String(buffer);
-
             imageBase64Preview = $"data:{file.ContentType};base64,{base64}";
             imageBase64Data = base64;
         }
@@ -287,39 +336,34 @@
         isLoading = true;
         errorMessage = "";
         result = null;
-
         try
         {
             var request = new AnalysisRequest();
-
-            if (activeTab == 0) // Text
+            if (activeTab == 0)
             {
                 if (string.IsNullOrWhiteSpace(inputText)) throw new Exception("Please enter some text to analyze.");
                 request.InputType = "text";
                 request.Content = inputText;
             }
-            else if (activeTab == 1) // URL
+            else if (activeTab == 1)
             {
                 if (string.IsNullOrWhiteSpace(inputUrl)) throw new Exception("Please enter a valid URL.");
                 request.InputType = "url";
                 request.Content = inputUrl;
             }
-            else if (activeTab == 2) // Image
+            else if (activeTab == 2)
             {
                 if (string.IsNullOrWhiteSpace(imageBase64Data)) throw new Exception("Please upload an image first.");
                 request.InputType = "image";
                 request.Content = imageBase64Data;
             }
 
-            // JSON Case Sensitivity ayarı ile garantiye alalım
             var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var response = await Http.PostAsJsonAsync("api/Analyze/analyze", request);
 
             if (response.IsSuccessStatusCode)
             {
-                // DTO özellik isimleri (CamelCase/PascalCase) karışıklığını önlemek için options ekledim
                 result = await response.Content.ReadFromJsonAsync<AnalysisResponse>(jsonOptions);
-
                 if (!result.IsSuccess)
                 {
                     errorMessage = "Server Message: " + result.Message;
@@ -341,3 +385,219 @@
         }
     }
 }
+
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #121212;
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+    }
+
+    :root {
+        --bg-main: #121212;
+        --bg-card-outer: #3d3c3d;
+        --bg-card-inner: #323132;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+        --theme-blue: #008cff;
+    }
+
+    .page-wrapper {
+        background-color: var(--bg-main);
+        min-height: 100vh;
+        width: 100%;
+        color: var(--text-primary);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .text-theme-blue {
+        color: var(--theme-blue) !important;
+    }
+
+    /* Glow Card */
+    .glow-card-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        background-color: var(--bg-card-outer);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+
+    /* Beyaz Glow (Varsayılan & Real Haber İçin) */
+    .card-glow-effect-white {
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        background-color: white;
+        filter: blur(80px);
+        top: -200px;
+        left: -200px;
+        z-index: 0;
+        opacity: 0.3;
+        animation: glowPulse 10s infinite alternate ease-in-out;
+    }
+
+    /* Kırmızı Glow (Fake Haber İçin) */
+    .card-glow-effect-red {
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        background-color: #e74c3c;
+        filter: blur(80px);
+        top: -200px;
+        left: -200px;
+        z-index: 0;
+        opacity: 0.5;
+        animation: glowPulse 8s infinite alternate ease-in-out;
+    }
+
+    /* Mavi Glow (Gemini Kartı İçin) - YENİ EKLENDİ */
+    .card-glow-effect-blue {
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        background-color: var(--theme-blue);
+        filter: blur(80px);
+        top: -200px;
+        left: -200px;
+        z-index: 0;
+        opacity: 0.3;
+        animation: glowPulse 10s infinite alternate ease-in-out;
+    }
+
+    .card-glow-effect-green {
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        background-color: #00C000;
+        filter: blur(80px);
+        top: -200px;
+        left: -200px;
+        z-index: 0;
+        opacity: 0.5;
+        animation: glowPulse 8s infinite alternate ease-in-out;
+    }
+
+    @@keyframes glowPulse {
+        0% {
+            transform: scale(1) translate(0, 0);
+            opacity: 0.3;
+        }
+
+        100% {
+            transform: scale(1.1) translate(20px, 20px);
+            opacity: 0.5;
+        }
+    }
+
+    .card-surface {
+        position: relative;
+        z-index: 1;
+        margin: 2px;
+        border-radius: 14px;
+        background-color: var(--bg-card-inner);
+        color: var(--text-primary);
+    }
+
+    /* Inputlar */
+    .custom-input {
+        background-color: #252525;
+        border: 1px solid #383838;
+        color: white;
+        border-radius: 8px;
+    }
+
+        .custom-input:focus {
+            background-color: #2a2a2a;
+            color: white;
+            border-color: var(--theme-blue);
+            box-shadow: 0 0 0 3px rgba(0, 140, 255, 0.2);
+        }
+
+        .custom-input::placeholder {
+            color: #666;
+        }
+
+    .custom-input-addon {
+        background-color: #252525;
+        border: 1px solid #383838;
+        color: var(--text-secondary);
+    }
+
+    /* Tablar */
+    .nav-pills .nav-link {
+        color: var(--text-secondary);
+        background-color: transparent;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+        .nav-pills .nav-link:hover {
+            color: white;
+            background-color: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: var(--theme-blue);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 140, 255, 0.3);
+        }
+
+    /* Buton Stili (Neon Blue) */
+    .btn-neon {
+        padding: 10px 20px;
+        text-transform: uppercase;
+        border-radius: 8px;
+        font-size: 17px;
+        font-weight: 500;
+        color: #ffffff80;
+        text-shadow: none;
+        background: transparent;
+        cursor: pointer;
+        box-shadow: transparent;
+        border: 1px solid #ffffff80;
+        transition: 0.5s ease;
+        user-select: none;
+        width: 100%;
+    }
+
+        .btn-neon:hover,
+        .btn-neon:focus {
+            color: #ffffff;
+            background: #008cff;
+            border: 1px solid #008cff;
+            text-shadow: 0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff;
+            box-shadow: 0 0 5px #008cff, 0 0 20px #008cff, 0 0 50px #008cff, 0 0 100px #008cff;
+        }
+
+        .btn-neon:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+    /* Linkler ve Yardımcılar */
+    .hover-effect:hover {
+        background-color: rgba(255,255,255,0.03) !important;
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .text-truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
