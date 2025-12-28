@@ -1,118 +1,71 @@
 ﻿using System;
-using System.Threading.Tasks;
-using PuppeteerSharp;
-using SmartReader;
-using TruthLens.Core.Interfaces;
-using System.Text.RegularExpressions;
 using System.Net.Http;
+using System.Threading.Tasks;
+using TruthLens.Core.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace TruthLens.Services
 {
     public class ScraperService : IScraperService
     {
-        // HttpClient'ı static tutmak performans için daha iyidir
-        private static readonly HttpClient _httpClient = new HttpClient();
+        private readonly HttpClient _httpClient;
+        // Jina AI ücretsizdir ama yoğun kullanımda key isteyebilir. 
+        // Şimdilik keysiz çalışır, ilerde gerekirse header'a eklersin.
 
-        public ScraperService()
+        public ScraperService(HttpClient httpClient)
         {
-            // Kendimizi en son sürüm Chrome gibi tanıtıyoruz (Kritik Nokta Burası!)
+            _httpClient = httpClient;
+
+            // Jina AI bazen isteğin robottan geldiğini anlayınca JSON dönebiliyor.
+            // Biz direkt metin istediğimiz için Header ayarı yapalım.
             if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
             {
-                _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                _httpClient.DefaultRequestHeaders.Add("User-Agent", "TruthLensApp/1.0");
+            }
+            if (!_httpClient.DefaultRequestHeaders.Contains("x-respond-with"))
+            {
+                // Bize direkt metin (Markdown) dönmesini söylüyoruz
+                _httpClient.DefaultRequestHeaders.Add("x-respond-with", "text");
             }
         }
 
         public async Task<string> ScrapeTextAsync(string url)
         {
-            string rawText = "";
+            if (string.IsNullOrEmpty(url)) return "URL boş olamaz.";
 
-            if (url.Contains("x.com") || url.Contains("twitter.com"))
-                rawText = await ScrapFromX(url);
-            else
-                rawText = await ScrapFromNewsSite(url);
-
-            return CleanandFormatText(rawText);
-        }
-
-        private async Task<string> ScrapFromNewsSite(string url)
-        {
             try
             {
-                // ADIM 1: İçeriği SmartReader'a çektirmeden önce biz çekiyoruz.
-                // Çünkü SmartReader'ın varsayılan isteği Azure'da engelleniyor.
-                var htmlContent = await _httpClient.GetStringAsync(url);
+                // --- JINA AI---
+                var targetUrl = $"https://r.jina.ai/{url}";
 
-                // ADIM 2: İndirdiğimiz HTML'i SmartReader'a veriyoruz.
-                var reader = new Reader(url, htmlContent);
-                var article = await reader.GetArticleAsync();
+                var response = await _httpClient.GetAsync(targetUrl);
 
-                if (article.IsReadable)
+                if (response.IsSuccessStatusCode)
                 {
-                    return $"{article.Title}\n\n{article.TextContent}";
+                    var content = await response.Content.ReadAsStringAsync();
+
+                    if (string.IsNullOrWhiteSpace(content))
+                        return "İçerik boş döndü.";
+
+                    // Jina AI genelde "Title" bilgisini metnin en başına koyar.
+                    // Markdown formatında geldiği için temizlemeye bile gerek yok, 
+                    // ama senin temizleme fonksiyonunu yine de kullanabiliriz.
+
+                    // X.com (Twitter) için özel not:
+                    // Jina AI Twitter'ı da okuyabilir ama bazen giriş ekranına takılabilir.
+                    // Yine de Puppeteer'dan çok daha stabil çalışır.
+
+                    return content;
                 }
-
-                // Yedek Plan: Eğer SmartReader hala okuyamazsa ham HTML'den body'i almayı deneyebiliriz
-                // Ama şimdilik hata mesajı dönelim.
-                return "Site içeriği okunamadı (Bot koruması veya boş içerik).";
-            }
-            catch (Exception ex)
-            {
-                return $"Haber sitesi okuma hatası: {ex.Message}";
-            }
-        }
-
-        private async Task<string> ScrapFromX(string url)
-        {
-            try
-            {
-                // AZURE UYARISI: Azure Web App'te Puppeteer çalıştırmak zordur.
-                // Klasör izinleri yüzünden tarayıcı inemeyebilir.
-
-                var browserFetcher = new BrowserFetcher();
-                await browserFetcher.DownloadAsync();
-
-                // Azure için kritik ayarlar: --no-sandbox
-                var launchOptions = new LaunchOptions
+                else
                 {
-                    Headless = true,
-                    Args = new[] { "--no-sandbox", "--disable-setuid-sandbox" }
-                };
-
-                using var browser = await Puppeteer.LaunchAsync(launchOptions);
-                using var page = await browser.NewPageAsync();
-
-                // X.com gibi siteler için User-Agent şarttır
-                await page.SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-
-                await page.GoToAsync(url);
-
-                var selector = "div[data-testid='tweet']";
-
-                // Timeout süresini biraz uzatalım (Azure yavaş olabilir)
-                await page.WaitForSelectorAsync(selector, new WaitForSelectorOptions { Timeout = 10000 });
-
-                var text = await page.EvaluateFunctionAsync<string>(
-                    $"() => document.querySelector('{selector}').innerText"
-                    );
-
-                return text;
+                    return $"Site okunamadı. Hata Kodu: {response.StatusCode}";
+                }
             }
             catch (Exception ex)
             {
-                // Puppeteer Azure'da çalışmazsa buraya düşecektir.
-                return $"X.com scraping hatası: {ex.Message}. (Azure ortamında Puppeteer yapılandırması eksik olabilir)";
+                return $"Scraping hatası: {ex.Message}";
             }
-        }
-
-        private string CleanandFormatText(string input)
-        {
-            if (string.IsNullOrEmpty(input)) return input;
-
-            string noHtml = Regex.Replace(input, "<.*?>", string.Empty);
-            string decoded = System.Net.WebUtility.HtmlDecode(noHtml);
-            string noDoubleSpaces = Regex.Replace(decoded, @"\s+", " ");
-
-            return noDoubleSpaces.Trim();
         }
     }
 }
