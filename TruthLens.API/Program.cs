@@ -35,7 +35,7 @@ builder.Services.AddScoped<IScraperService, ScraperService>();
 builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.AddScoped<IGoogleVerificationService, GoogleVerificationService>();
 builder.Services.AddScoped<ILLMService, LLMService>();
-builder.Services.AddScoped<IUrlTrustService, IUrlTrustService>();
+builder.Services.AddScoped<IUrlTrustService, UrlTrustService>();
 builder.Services.AddHttpClient();
 
 
