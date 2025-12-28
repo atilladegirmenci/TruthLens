@@ -3,30 +3,20 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using TruthLens.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
+using SmartReader; // SmartReader kütüphanesi tekrar sahnede!
 
 namespace TruthLens.Services
 {
     public class ScraperService : IScraperService
     {
         private readonly HttpClient _httpClient;
-        // Jina AI ücretsizdir ama yoğun kullanımda key isteyebilir. 
-        // Şimdilik keysiz çalışır, ilerde gerekirse header'a eklersin.
+        private readonly string _scraperApiKey;
 
-        public ScraperService(HttpClient httpClient)
+        public ScraperService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-
-            // Jina AI bazen isteğin robottan geldiğini anlayınca JSON dönebiliyor.
-            // Biz direkt metin istediğimiz için Header ayarı yapalım.
-            if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
-            {
-                _httpClient.DefaultRequestHeaders.Add("User-Agent", "TruthLensApp/1.0");
-            }
-            if (!_httpClient.DefaultRequestHeaders.Contains("x-respond-with"))
-            {
-                // Bize direkt metin (Markdown) dönmesini söylüyoruz
-                _httpClient.DefaultRequestHeaders.Add("x-respond-with", "text");
-            }
+            // Azure'a "ScraperApiSettings__ApiKey" olarak ekleyeceğiz
+            _scraperApiKey = configuration["ScraperApiSettings:ApiKey"];
         }
 
         public async Task<string> ScrapeTextAsync(string url)
@@ -35,31 +25,34 @@ namespace TruthLens.Services
 
             try
             {
-                // --- JINA AI---
-                var targetUrl = $"https://r.jina.ai/{url}";
+                // ScraperAPI'yi kullanarak siteye gidiyoruz.
+                // render=true : JavaScript çalıştıran siteler (Twitter/X gibi) için gereklidir.
+                var targetUrl = $"http://api.scraperapi.com?api_key={_scraperApiKey}&url={Uri.EscapeDataString(url)}&render=true";
 
+                // 1. ScraperAPI üzerinden sitenin HTML kaynağını çek
                 var response = await _httpClient.GetAsync(targetUrl);
 
-                if (response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
+                    return $"Siteye erişilemedi. Hata Kodu: {response.StatusCode} (ScraperAPI)";
+                }
 
-                    if (string.IsNullOrWhiteSpace(content))
-                        return "İçerik boş döndü.";
+                var htmlContent = await response.Content.ReadAsStringAsync();
 
-                    // Jina AI genelde "Title" bilgisini metnin en başına koyar.
-                    // Markdown formatında geldiği için temizlemeye bile gerek yok, 
-                    // ama senin temizleme fonksiyonunu yine de kullanabiliriz.
+                // 2. İndirdiğimiz HTML'i SmartReader ile analiz et (Sadece metni al)
+                var reader = new Reader(url, htmlContent);
+                var article = await reader.GetArticleAsync();
 
-                    // X.com (Twitter) için özel not:
-                    // Jina AI Twitter'ı da okuyabilir ama bazen giriş ekranına takılabilir.
-                    // Yine de Puppeteer'dan çok daha stabil çalışır.
-
-                    return content;
+                if (article.IsReadable)
+                {
+                    // Başlık ve İçeriği birleştirip dönüyoruz
+                    return $"BAŞLIK: {article.Title}\n\nİÇERİK:\n{article.TextContent}";
                 }
                 else
                 {
-                    return $"Site okunamadı. Hata Kodu: {response.StatusCode}";
+                    // Eğer SmartReader okuyamazsa ham HTML'den body text'i almaya çalışalım (Yedek plan)
+                    // Ama şimdilik basit bir mesaj dönelim.
+                    return "Site içeriği metne dönüştürülemedi (İçerik çok kısa veya karmaşık).";
                 }
             }
             catch (Exception ex)
