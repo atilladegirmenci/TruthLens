@@ -16,13 +16,16 @@ namespace TruthLens.API.Controllers
         private readonly IAiService _aiService;
         private readonly IGoogleVerificationService _googleVerificationService;
         private readonly ILLMService _llmService;
-        public AnalyzeController(IOcrService ocrService, IScraperService scraperService, IAiService aiService, IGoogleVerificationService googleVerificationService, ILLMService llmService)
+        private readonly IUrlTrustService _urlTrustService;
+        public AnalyzeController(IOcrService ocrService, IScraperService scraperService, IAiService aiService, IGoogleVerificationService googleVerificationService, ILLMService llmService, IUrlTrustService urlTrustService)
         {
             _googleVerificationService = googleVerificationService;
             _ocrService = ocrService;
             _scraperService = scraperService;
             _aiService = aiService;
             _llmService = llmService;
+            _urlTrustService = urlTrustService;
+            
         }
 
         [HttpPost("analyze")]
@@ -54,6 +57,11 @@ namespace TruthLens.API.Controllers
                     string scrapedText = await _scraperService.ScrapeTextAsync(request.Content);
 
                     response.AnalyzedContent = scrapedText;
+
+                    var urlResponse = await _urlTrustService.AnalyzeDomainTrustAsync(request.Content);
+                    response.IsUrlTrusted =  urlResponse.IsTrusted;
+                    response.UrlTrustExplanation = $"{urlResponse.TrustLabel}: {urlResponse.Details}";
+
                     response.Message = "URL content analyzed successfully and text has submitted";
                 }
 

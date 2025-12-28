@@ -27,6 +27,10 @@ namespace TruthLens.Shared.DTOs
 
         public List<RelatedNewsItem> SimilarNews { get; set; } = new();
 
+        public String UrlTrustExplanation { get; set; } = string.Empty;
+
+        public bool IsUrlTrusted { get; set; }
+
 
     }
 

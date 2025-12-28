@@ -246,7 +246,49 @@
                             </div>
                         </div>
                     }
+                    @if (!string.IsNullOrEmpty(result.UrlTrustExplanation))
+                    {
+                        // Renk ve İkon Mantığı
+                        var trustGlow = result.IsUrlTrusted ? "card-glow-effect-green" : "card-glow-effect-red";
+                        var trustIcon = result.IsUrlTrusted ? "bi-shield-fill-check" : "bi-shield-fill-exclamation";
+                        var trustColor = result.IsUrlTrusted ? "text-success" : "text-danger";
+                        var borderColor = result.IsUrlTrusted ? "border-success" : "border-danger";
+                        var titleText = result.IsUrlTrusted ? "Domain Trusted" : "Domain Suspicious";
 
+                        <div class="glow-card-container mb-4 animate__animated animate__fadeInUp">
+                            <div class="@trustGlow"></div>
+
+                            <div class="card-surface p-4">
+                                <div class="d-flex align-items-start">
+
+                                    <div class="rounded-circle p-3 d-flex align-items-center justify-content-center me-3 border border-opacity-25 @borderColor"
+                                         style="background-color: rgba(0,0,0,0.3); width: 60px; height: 60px; min-width: 60px;">
+                                        <i class="bi @trustIcon display-6 @trustColor"></i>
+                                    </div>
+
+                                    <div class="flex-grow-1">
+                                        <h5 class="fw-bold text-white mb-2">
+                                            Domain Analysis
+                                            @if (!result.IsUrlTrusted)
+                                            {
+                                                <span class="badge bg-danger ms-2" style="font-size: 0.6rem; vertical-align: middle;">RISK DETECTED</span>
+                                            }
+                                        </h5>
+
+                                        <p class="mb-0 text-light opacity-90" style="font-size: 1.05rem; line-height: 1.6;">
+                                            @result.UrlTrustExplanation
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 text-end">
+                                    <span class="badge bg-opacity-20 border border-secondary border-opacity-25 text-secondary fst-normal" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                                        <i class="bi bi-hdd-network me-1"></i> Verified by <strong>Whois Registry</strong>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    }
                     @if (result.SimilarNews != null && result.SimilarNews.Count > 0)
                     {
                         <div class="glow-card-container mb-5">
