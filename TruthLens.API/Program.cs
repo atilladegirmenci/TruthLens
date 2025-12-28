@@ -11,14 +11,18 @@ builder.Services.AddControllers();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazorClient",
+    options.AddPolicy("AllowAll",
         policy =>
         {
-            policy.WithOrigins("https://localhost:7078", "http://localhost:5243") 
+            policy.AllowAnyOrigin()  
                   .AllowAnyMethod()
                   .AllowAnyHeader();
         });
 });
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -47,7 +51,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowBlazorClient");
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
