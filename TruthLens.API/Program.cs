@@ -1,4 +1,4 @@
-using TruthLens.Core.Interfaces;
+﻿using TruthLens.Core.Interfaces;
 using TruthLens.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,7 +40,13 @@ builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
+// Normalde sadece Development modunda hata detayını gösteririz.
+// Ama hatayı bulmak için bunu ŞİMDİ ZORLA AÇIYORUZ.
+app.UseDeveloperExceptionPage();
 
+// Swagger her zaman açık kalsın (hata ayıklama bitene kadar)
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
