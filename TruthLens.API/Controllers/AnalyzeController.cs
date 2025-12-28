@@ -42,19 +42,19 @@ namespace TruthLens.API.Controllers
                     string extractedText = _ocrService.ExtractTextFromImage(imageBytes);
 
                     response.AnalyzedContent = extractedText;
-                    response.Message = "Image analyzed successfully";
+                    response.Message = "Image analyzed successfully and text has submitted";
                 }
                 else if (request.InputType.ToLower() == "text")
                 {
                     response.AnalyzedContent = request.Content;
-                    response.Message = "Text analyzed successfully";
+                    response.Message = "Text has submitted successfully";
                 }
                 else if (request.InputType.ToLower() == "url")
                 {
                     string scrapedText = await _scraperService.ScrapeTextAsync(request.Content);
 
                     response.AnalyzedContent = scrapedText;
-                    response.Message = "URL content analyzed successfully";
+                    response.Message = "URL content analyzed successfully and text has submitted";
                 }
 
                 if(string.IsNullOrEmpty(response.AnalyzedContent)) return BadRequest("No content to analyze.");
@@ -77,14 +77,7 @@ namespace TruthLens.API.Controllers
 
                     if (review != null)
                     {
-                        response.FactCheckResult = $"Verdict: {review.TextualRating} by {review.Publisher.Name}.";
-
-                        // if fact check says False or Fake change AiLabel to FAKE and add warning to explanation
-                        //if (review.TextualRating.Contains("False") || review.TextualRating.Contains("Fake"))
-                        //{
-                        //    response.AiLabel = "FAKE";
-                        //    response.AiExplanation = "⚠️ OFFICIAL FACT-CHECK has Proven this False.\n" + response.AiExplanation;
-                        //}
+                        response.FactCheckResult = $"Verdict: \"{review.TextualRating.ToUpperInvariant()}\" by {review.Publisher.Name}.";
                     }
 
                     // Fact Check links in the Similar News section

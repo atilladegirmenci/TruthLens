@@ -1,26 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using PuppeteerSharp;
 using SmartReader;
 using TruthLens.Core.Interfaces;
 using System.Text.RegularExpressions;
-using System.Web;
+using System.Net.Http;
 
 namespace TruthLens.Services
 {
     public class ScraperService : IScraperService
     {
-        
+        // HttpClient'ı static tutmak performans için daha iyidir
+        private static readonly HttpClient _httpClient = new HttpClient();
+
+        public ScraperService()
+        {
+            // Kendimizi en son sürüm Chrome gibi tanıtıyoruz (Kritik Nokta Burası!)
+            if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
+            {
+                _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            }
+        }
+
         public async Task<string> ScrapeTextAsync(string url)
         {
             string rawText = "";
 
-            if (url.Contains("x.com")) 
+            if (url.Contains("x.com") || url.Contains("twitter.com"))
                 rawText = await ScrapFromX(url);
-            else 
+            else
                 rawText = await ScrapFromNewsSite(url);
 
             return CleanandFormatText(rawText);
@@ -30,20 +38,26 @@ namespace TruthLens.Services
         {
             try
             {
-                var reader = new Reader(url);
+                // ADIM 1: İçeriği SmartReader'a çektirmeden önce biz çekiyoruz.
+                // Çünkü SmartReader'ın varsayılan isteği Azure'da engelleniyor.
+                var htmlContent = await _httpClient.GetStringAsync(url);
+
+                // ADIM 2: İndirdiğimiz HTML'i SmartReader'a veriyoruz.
+                var reader = new Reader(url, htmlContent);
                 var article = await reader.GetArticleAsync();
 
-                if(article.IsReadable)
+                if (article.IsReadable)
                 {
                     return $"{article.Title}\n\n{article.TextContent}";
                 }
 
-                return "site content is not readable";
-
+                // Yedek Plan: Eğer SmartReader hala okuyamazsa ham HTML'den body'i almayı deneyebiliriz
+                // Ama şimdilik hata mesajı dönelim.
+                return "Site içeriği okunamadı (Bot koruması veya boş içerik).";
             }
             catch (Exception ex)
             {
-                return $"Error scraping news site: {ex.Message}";
+                return $"Haber sitesi okuma hatası: {ex.Message}";
             }
         }
 
@@ -51,16 +65,31 @@ namespace TruthLens.Services
         {
             try
             {
+                // AZURE UYARISI: Azure Web App'te Puppeteer çalıştırmak zordur.
+                // Klasör izinleri yüzünden tarayıcı inemeyebilir.
+
                 var browserFetcher = new BrowserFetcher();
                 await browserFetcher.DownloadAsync();
 
-                using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
+                // Azure için kritik ayarlar: --no-sandbox
+                var launchOptions = new LaunchOptions
+                {
+                    Headless = true,
+                    Args = new[] { "--no-sandbox", "--disable-setuid-sandbox" }
+                };
+
+                using var browser = await Puppeteer.LaunchAsync(launchOptions);
                 using var page = await browser.NewPageAsync();
+
+                // X.com gibi siteler için User-Agent şarttır
+                await page.SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
 
                 await page.GoToAsync(url);
 
                 var selector = "div[data-testid='tweet']";
-                await page.WaitForSelectorAsync(selector);
+
+                // Timeout süresini biraz uzatalım (Azure yavaş olabilir)
+                await page.WaitForSelectorAsync(selector, new WaitForSelectorOptions { Timeout = 10000 });
 
                 var text = await page.EvaluateFunctionAsync<string>(
                     $"() => document.querySelector('{selector}').innerText"
@@ -70,7 +99,8 @@ namespace TruthLens.Services
             }
             catch (Exception ex)
             {
-                return $"Error scraping X.com: {ex.Message}";
+                // Puppeteer Azure'da çalışmazsa buraya düşecektir.
+                return $"X.com scraping hatası: {ex.Message}. (Azure ortamında Puppeteer yapılandırması eksik olabilir)";
             }
         }
 
@@ -79,13 +109,10 @@ namespace TruthLens.Services
             if (string.IsNullOrEmpty(input)) return input;
 
             string noHtml = Regex.Replace(input, "<.*?>", string.Empty);
-
             string decoded = System.Net.WebUtility.HtmlDecode(noHtml);
-
             string noDoubleSpaces = Regex.Replace(decoded, @"\s+", " ");
 
             return noDoubleSpaces.Trim();
-
         }
     }
 }

@@ -16,6 +16,9 @@ namespace TruthLens.Services
             _httpClient = httpClient;
             _apiKey = conf["GoogleSettings:ApiKey"];
             _searchEngineId = conf["GoogleSettings:SearchEngineId"];
+
+            if(string.IsNullOrEmpty(_apiKey)) throw new Exception ("Google API key is not configured.");
+            if(string.IsNullOrEmpty(_searchEngineId)) throw new Exception ("Google Search Engine ID is not configured.");
         }
 
         public async Task<(FactCheckResponse? FactCheck, GoogleSearchResponse? WebSearch)> VerifyNewsAsync(string query)
@@ -45,6 +48,7 @@ namespace TruthLens.Services
             {
                 var searchUrl = $"https://www.googleapis.com/customsearch/v1?key={_apiKey}&cx={_searchEngineId}&q={encodedQuery}";
                 searchData = await _httpClient.GetFromJsonAsync<GoogleSearchResponse>(searchUrl);
+                
             }
             catch (Exception ex)
             {
