@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "TruthLens.UI",
   "resources": {
-    "hash": "sha256-yc52Q94Vc8DAh7ood0jgS4rujmhJQ6AnYXntF54EbCM=",
+    "hash": "sha256-nXG+dInrcUCa1JPOBrnv9ka0358py03VLr3TwgImPUc=",
     "jsModuleNative": {
       "dotnet.native.8.0.5.a7keqal8sz.js": "sha256-boyHe+0RMZDkzBKGhsrnXPhPg3oZ6UqJnTUzngJPjNY="
     },
@@ -48,8 +48,8 @@
       "System.Text.Encodings.Web.wasm": "sha256-V69v6JYAgTsrgM4epAyn/+1+KjM60Hxzokb2hKtbPt0=",
       "System.Text.Json.wasm": "sha256-9CbvWH2q8BjyUcyAFg0e9qSPJLl/KTZIOXgLi3RXpdI=",
       "System.Text.RegularExpressions.wasm": "sha256-o6Ef/uOI9sFxJXKnXQbJnRMbcIIJ/ZFdc4fFqA9wu7Y=",
-      "TruthLens.Shared.wasm": "sha256-mq4K9zk2ne75XebNDuGtmJiofPz+plSNcAR0KXr2N7k=",
-      "TruthLens.UI.wasm": "sha256-cUGnxs/jM3c+pwRGob+kYE/sYq36FgCk/BR6quj1AtM="
+      "TruthLens.Shared.wasm": "sha256-f/C3tBGivsTBbF+r2YroMEXeQXxit2gMavkl+boHngA=",
+      "TruthLens.UI.wasm": "sha256-bHVmsU2MTsdiGtSrU8P+7Eu+J2/Waz4ZcwWv/hhN1ZU="
     }
   },
   "cacheBootResources": true,

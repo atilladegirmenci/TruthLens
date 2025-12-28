@@ -11,7 +11,8 @@
           "Swashbuckle.AspNetCore": "6.4.0",
           "TruthLens.Core": "1.0.0",
           "TruthLens.Services": "1.0.0",
-          "TruthLens.Shared": "1.0.0"
+          "TruthLens.Shared": "1.0.0",
+          "Whois": "3.0.1"
         },
         "runtime": {
           "TruthLens.API.dll": {}
@@ -25,6 +26,7 @@
           }
         }
       },
+      "Microsoft.CSharp/4.7.0": {},
       "Microsoft.Extensions.ApiDescription.Server/6.0.5": {},
       "Microsoft.Extensions.Configuration/10.0.1": {
         "dependencies": {
@@ -227,6 +229,26 @@
           }
         }
       },
+      "Tokenizer/2.2.2": {
+        "runtime": {
+          "lib/netstandard2.0/Tokenizer.dll": {
+            "assemblyVersion": "2.2.2.0",
+            "fileVersion": "2.2.2.0"
+          }
+        }
+      },
+      "Whois/3.0.1": {
+        "dependencies": {
+          "Microsoft.CSharp": "4.7.0",
+          "Tokenizer": "2.2.2"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Whois.dll": {
+            "assemblyVersion": "3.0.1.0",
+            "fileVersion": "3.0.1.0"
+          }
+        }
+      },
       "TruthLens.Core/1.0.0": {
         "dependencies": {
           "TruthLens.Shared": "1.0.0"
@@ -241,7 +263,8 @@
           "PuppeteerSharp": "20.2.5",
           "SmartReader": "0.11.0",
           "Tesseract": "5.2.0",
-          "TruthLens.Core": "1.0.0"
+          "TruthLens.Core": "1.0.0",
+          "Whois": "3.0.1"
         },
         "runtime": {
           "TruthLens.Services.dll": {}
@@ -266,6 +289,13 @@
       "sha512": "sha512-6ph8mpaQx0KL0COYRt0kI8MB9gSp1PtKijKMhJU//+aVFgKAJLKDesG/+26JSaVCOrHNgPf12wpfoyRcMYOeXg==",
       "path": "anglesharp/1.4.0",
       "hashPath": "anglesharp.1.4.0.nupkg.sha512"
+    },
+    "Microsoft.CSharp/4.7.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-pTj+D3uJWyN3My70i2Hqo+OXixq3Os2D1nJ2x92FFo6sk8fYS1m1WLNTs0Dc1uPaViH0YvEEwvzddQ7y4rhXmA==",
+      "path": "microsoft.csharp/4.7.0",
+      "hashPath": "microsoft.csharp.4.7.0.nupkg.sha512"
     },
     "Microsoft.Extensions.ApiDescription.Server/6.0.5": {
       "type": "package",
@@ -427,6 +457,20 @@
       "sha512": "sha512-YB7feJlrTWSXtK8+WaCcseGSPK/1r2d2FWeKGyndlrPwYClrzTlCoHD4/oQEUjKafmpkWlhTZZ7pxiRJYZgj6w==",
       "path": "tesseract/5.2.0",
       "hashPath": "tesseract.5.2.0.nupkg.sha512"
+    },
+    "Tokenizer/2.2.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-HCbQh3dK+CvAkn20tS1Lt643gaBp7j6JypDp7jBzUv6mbW55jKQOYmKrtUFLv9cw6KvQk3ubZIIW0CFtpyRcFA==",
+      "path": "tokenizer/2.2.2",
+      "hashPath": "tokenizer.2.2.2.nupkg.sha512"
+    },
+    "Whois/3.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-9KkWUEMW7kHF9JFABJ5Zyw60K8zynFPDQ0HVL4NYTFd1UCg4vj9kuMzVDoZz2IjWRCnmnW3oYTEqqlJWS178+g==",
+      "path": "whois/3.0.1",
+      "hashPath": "whois.3.0.1.nupkg.sha512"
     },
     "TruthLens.Core/1.0.0": {
       "type": "project",
