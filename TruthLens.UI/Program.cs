@@ -7,5 +7,5 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7240/") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://truthlens-gtcne5bgeefecseu.spaincentral-01.azurewebsites.net") });
 await builder.Build().RunAsync();
