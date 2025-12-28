@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions; // Regex için gerekli
 using System.Threading.Tasks;
 using TruthLens.Core.DTOs;
 using TruthLens.Core.Interfaces;
@@ -17,25 +15,33 @@ namespace TruthLens.Services
 
             try
             {
+                // 1. URL Temizliği: "https://" ve "www." kısımlarını atıyoruz.
+                // Whois sorguları genelde "google.com" şeklinde saf domain ister.
                 var uri = new Uri(url);
-                var host = uri.Host;
+                var host = uri.Host.Replace("www.", "");
 
                 var whois = new WhoisLookup();
                 var response = await whois.LookupAsync(host);
 
-                if (response.Registered.HasValue)
+                // Tarihi yakalamak için değişkenimiz
+                DateTime? creationDate = response.Registered;
+
+                // --- B PLANI: Regex ile Elle Arama ---
+                // Eğer kütüphane tarihi bulamadıysa (null geldiyse), ham metne (Content) bakarız.
+                if (!creationDate.HasValue && !string.IsNullOrEmpty(response.Content))
                 {
-                    var creationDate = response.Registered.Value;
-                    var age = DateTime.Now - creationDate;
+                    creationDate = ParseDateFromRawOutput(response.Content);
+                }
+
+                // --- ANALİZ ---
+                if (creationDate.HasValue)
+                {
+                    var dateValue = creationDate.Value;
+                    var age = DateTime.Now - dateValue;
                     int daysOld = (int)age.TotalDays;
                     int yearsOld = daysOld / 365;
 
                     result.DomainAgeDays = daysOld;
-
-                    // --- LOGIC ---
-                    // < 30 days: HIGH RISK (High probability of Phishing/Fake)
-                    // < 1 year: SUSPICIOUS (Not established yet)
-                    // > 1 year: TRUSTED (Technically)
 
                     if (daysOld < 30)
                     {
@@ -45,7 +51,7 @@ namespace TruthLens.Services
                     }
                     else if (daysOld < 365)
                     {
-                        result.IsTrusted = false; // Approaching with caution
+                        result.IsTrusted = false;
                         result.TrustLabel = "⚠️ MEDIUM RISK";
                         result.Details = $"This site is {daysOld} days old (less than a year). It may not have an established reputation yet.";
                     }
@@ -58,11 +64,11 @@ namespace TruthLens.Services
                 }
                 else
                 {
-                    // Whois date hidden or not found
+                    // Hem kütüphane hem de Regex bulamadıysa
                     result.IsTrusted = false;
                     result.DomainAgeDays = 0;
                     result.TrustLabel = "❔ UNKNOWN";
-                    result.Details = "Domain registration date is hidden or could not be determined. Proceed with caution.";
+                    result.Details = "Domain registration date is hidden/redacted or could not be parsed. Proceed with caution.";
                 }
             }
             catch (Exception ex)
@@ -73,6 +79,42 @@ namespace TruthLens.Services
             }
 
             return result;
+        }
+
+        // --- YARDIMCI METOD: Regex ile Tarih Bulma ---
+        private DateTime? ParseDateFromRawOutput(string content)
+        {
+            try
+            {
+                // Whois çıktılarında tarih genelde bu etiketlerle başlar:
+                string[] patterns = new[]
+                {
+                    @"Creation Date:\s*(.*)",
+                    @"Created on:\s*(.*)",
+                    @"Registered on:\s*(.*)",
+                    @"Domain Name Commencement Date:\s*(.*)",
+                    @"created:\s*(.*)"
+                };
+
+                foreach (var pattern in patterns)
+                {
+                    var match = Regex.Match(content, pattern, RegexOptions.IgnoreCase);
+                    if (match.Success)
+                    {
+                        string dateString = match.Groups[1].Value.Trim();
+                        // Tarihi parse etmeyi dene
+                        if (DateTime.TryParse(dateString, out DateTime parsedDate))
+                        {
+                            return parsedDate;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Parsing hatası olursa null dön
+            }
+            return null;
         }
     }
 }
